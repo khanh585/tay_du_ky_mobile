@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "938235899555",
+    "firebase_url": "https://tayduky-98f8d.firebaseio.com",
+    "project_id": "tayduky-98f8d",
+    "storage_bucket": "tayduky-98f8d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:938235899555:android:eb3ec439fb450188031916",
+        "android_client_info": {
+          "package_name": "com.khanh585.tay_du_ky_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "938235899555-gmf104nspiqagq8a8j272goue87ht1q9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhfStX81VJqo3NVka4SdYNW2hxvi77sjU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "938235899555-gmf104nspiqagq8a8j272goue87ht1q9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
