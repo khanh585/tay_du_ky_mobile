@@ -29,51 +29,52 @@ class _LoginState extends State<Login> {
   final txtEmail = TextEditingController();
   final txtPassword = TextEditingController();
   bool flag;
+  bool wait;
 
   @override
   void initState() {
     super.initState();
     flag = true;
+    wait = false;
   }
 
   @override
   void dispose() {
     txtEmail.dispose();
     txtPassword.dispose();
+    _Signin();
     super.dispose();
   }
 
   void _Signin() async {
     String email = txtEmail.text;
     String password = txtPassword.text;
+    setState(() {
+      wait = true;
+    });
     try {
       await SignIn(email, password).then((result) => {
-            AUTHORIZATION_TOKEN = result,
-            print('-------' + AUTHORIZATION_TOKEN),
-            if (result != '')
+            ROLE = result[0],
+            USER_ID = result[1].toString(),
+            if (result != [])
               {
-                setState(() {
-                  flag = true;
-                }),
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => AdminScreen()),
                 ),
               }
-            else
-              {
-                setState(() {
-                  flag = false;
-                }),
-              },
           });
     } catch (Exception) {
-      AUTHORIZATION_TOKEN = "";
-      print('ERROR');
       setState(() {
         flag = false;
+        wait = false;
       });
+      print('ERROR');
     }
+    setState(() {
+      flag = true;
+      wait = false;
+    });
     // dispose();
   }
 
@@ -119,17 +120,26 @@ class _LoginState extends State<Login> {
                         height: 10,
                       ),
                       RaisedButton(
-                        onPressed: () => {_Signin()},
+                        onPressed: () {
+                          if (!wait) {
+                            _Signin();
+                          }
+                        },
                         padding: EdgeInsets.all(0),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                             side: BorderSide(color: Colors.white)),
                         color: Colors.green[300],
                         child: Container(
-                          child: Text(
-                            'Login',
-                            style: TextStyle(color: Colors.white, fontSize: 25),
-                          ),
+                          child: wait
+                              ? CircularProgressIndicator(
+                                  strokeWidth: 3,
+                                )
+                              : Text(
+                                  'Login',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 25),
+                                ),
                           padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
                           decoration: BoxDecoration(
                               color: Colors.green[300],

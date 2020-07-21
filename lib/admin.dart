@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:tay_du_ky_app/home.dart';
+import 'package:tay_du_ky_app/login.dart';
 import 'package:tay_du_ky_app/screen/actor/actor.dart';
+import 'package:tay_du_ky_app/screen/actor/profile.dart';
 import 'package:tay_du_ky_app/screen/log.dart';
 import 'package:tay_du_ky_app/screen/tribulation/tribulation.dart';
 import 'package:tay_du_ky_app/screen/tool/tool.dart';
+import 'package:tay_du_ky_app/user.dart';
+import 'package:tay_du_ky_app/util/config.dart';
 // import 'package:tay_du_ky_app/screen/tribulation_detail.dart';
 
 class AdminScreen extends StatefulWidget {
@@ -12,9 +17,26 @@ class AdminScreen extends StatefulWidget {
 
 class _AddminState extends State<AdminScreen> {
   int indexScreen = 0;
-  List<Widget> list = [Tribulation(), Actor(), Tool(), Log()];
-  List<String> list_title = ['Kiep nan', 'Dien vien', 'Dao cu', 'Nhat ky'];
-  String title = 'Tay Du Ky';
+  List<Widget> list = [
+    Home(),
+    Tribulation(),
+    Actor(),
+    Tool(),
+    Log(),
+    User(),
+    ProfileScreen()
+  ];
+  List<String> list_title = [
+    'Home',
+    'Tribulation',
+    'Actor',
+    'Tool',
+    'Log',
+    'Character',
+    'Profile'
+  ];
+  String title = 'Home';
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -27,7 +49,7 @@ class _AddminState extends State<AdminScreen> {
       drawer: MyDrawer(
         onTap: (ctx, i) {
           setState(() {
-            title = 'Tay Du Ky - ' + list_title[i];
+            title = list_title[i];
             indexScreen = i;
             Navigator.pop(ctx);
           });
@@ -37,11 +59,16 @@ class _AddminState extends State<AdminScreen> {
   }
 }
 
-class MyDrawer extends StatelessWidget {
+class MyDrawer extends StatefulWidget {
   final Function onTap;
 
   const MyDrawer({Key key, this.onTap}) : super(key: key);
 
+  @override
+  _MyDrawerState createState() => _MyDrawerState();
+}
+
+class _MyDrawerState extends State<MyDrawer> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -68,67 +95,54 @@ class MyDrawer extends StatelessWidget {
                         backgroundImage: AssetImage('assets/images/wk.jpg'),
                       ),
                     ),
-                    SizedBox(height: 15),
-                    Container(
-                      decoration:
-                          BoxDecoration(color: Color.fromRGBO(10, 10, 10, 0.7)),
-                      child: Text(
-                        'Tề Thiên Đại Thánh',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Container(
-                      decoration:
-                          BoxDecoration(color: Color.fromRGBO(10, 10, 10, 0.7)),
-                      child: Text(
-                        'ngokhong@gmail.com',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
             ),
-            ListTile(
-              leading: Icon(Icons.cloud),
-              title: Text('Tribulation'),
-              onTap: () => onTap(context, 0),
+            showDrawer(
+                context, Icon(Icons.home), 'Home', 0, ['admin', 'actor']),
+            Divider(
+              height: 1,
             ),
-            ListTile(
-              leading: Icon(Icons.person),
-              title: Text('Actor'),
-              onTap: () => onTap(context, 1),
-            ),
-            ListTile(
-              leading: Icon(Icons.brush),
-              title: Text('Tool'),
-              onTap: () => onTap(context, 2),
-            ),
-            ListTile(
-              leading: Icon(Icons.list),
-              title: Text('Log'),
-              onTap: () => onTap(context, 3),
-            ),
+            showDrawer(context, Icon(Icons.cloud), 'Tribulation', 1, ['admin']),
+            showDrawer(context, Icon(Icons.person), 'Actor', 2, ['admin']),
+            showDrawer(context, Icon(Icons.brush), 'Tool', 3, ['admin']),
+            showDrawer(context, Icon(Icons.list), 'Log', 4, ['admin']),
+            showDrawer(context, Icon(Icons.person), 'Character', 5, ['actor']),
+            showDrawer(context, Icon(Icons.person), 'Profile', 6, ['actor']),
             Divider(
               height: 1,
             ),
             ListTile(
               leading: Icon(Icons.exit_to_app),
               title: Text('Log out'),
-              onTap: () => onTap(context, 3),
+              onTap: () => {
+                USER_ID = "",
+                ROLE = "",
+                Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                    (route) => false)
+              },
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget showDrawer(
+      BuildContext context, icon, title, index, List<String> role) {
+    if (role.contains(ROLE)) {
+      return ListTile(
+        leading: icon,
+        title: Text(title),
+        onTap: () => widget.onTap(context, index),
+      );
+    } else {
+      return Container(
+        height: 0,
+      );
+    }
   }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tay_du_ky_app/dao/LogDAO.dart';
+import 'package:tay_du_ky_app/dto/LogDTO.dart';
 
 class Log extends StatefulWidget {
   @override
@@ -7,72 +9,77 @@ class Log extends StatefulWidget {
 
 class _LogState extends State<Log> {
   final GlobalKey<AnimatedListState> _key = GlobalKey();
+  final GlobalKey<AnimatedListState> _refkey = GlobalKey();
+  List<LogDTO> futureListLogDTO;
+  bool wait = true;
+  // Future<List<LogDTO>> futureListLogDTO;
+  @override
+  void initState() {
+    wait = true;
+    super.initState();
+    _getListLogDTO();
+  }
 
-  List<String> _items = [
-    "Log 1",
-    "Log 2",
-    "Log 3",
-    "Log 4",
-  ];
+  Future<void> _getListLogDTO() async {
+    setState(() => {futureListLogDTO = null});
+    await fetchListLogDTO().then((result) => {
+          if (result != null)
+            {
+              setState(() => {
+                    wait = false,
+                    futureListLogDTO = result,
+                  })
+            },
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _addItem(),
-        child: Icon(Icons.add),
-      ),
-      body: SizedBox(
-        height: MediaQuery.of(context).size.height - 140,
-        child: AnimatedList(
-          key: _key,
-          initialItemCount: _items.length,
-          itemBuilder: (context, index, animation) {
-            return _buildItem(_items[index], animation, index);
-          },
+      body: RefreshIndicator(
+        key: _refkey,
+        onRefresh: () => fetchListLogDTO(),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height - 120,
+          child: wait
+              ? Center(
+                  child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                ))
+              : AnimatedList(
+                  key: _key,
+                  initialItemCount: futureListLogDTO.length,
+                  itemBuilder: (context, index, animation) {
+                    return _buildItem(
+                        futureListLogDTO[index], animation, index);
+                  },
+                ),
         ),
       ),
     );
   }
 
-  Widget _buildItem(String item, Animation animation, int index) {
+  Widget _buildItem(LogDTO item, Animation animation, int index) {
     return SizeTransition(
       sizeFactor: animation,
       child: Card(
         elevation: 2,
         child: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: Colors.amber,
-          ),
           title: Text(
-            item,
+            item.user_name,
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
-          subtitle: Text('lorem  ipsum dolor ...'),
-          trailing: IconButton(
-              icon: Icon(
-                Icons.close,
-                color: Colors.redAccent,
-              ),
-              onPressed: () {
-                _removeItem(index);
-              }),
+          subtitle: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              // Text('email: ' + item.email.toString()),
+              Text('action: ' + item.action),
+              Text('time: ' + item.date_create),
+            ],
+          ),
         ),
       ),
     );
-  }
-
-  void _removeItem(int index) {
-    String removedItem = _items.removeAt(index);
-    AnimatedListRemovedItemBuilder builder = (context, animation) {
-      return _buildItem(removedItem, animation, index);
-    };
-    _key.currentState.removeItem(index, builder);
-  }
-
-  void _addItem() {
-    int index = _items.length > 0 ? _items.length : 0;
-    _items.insert(index, 'Log ${_items.length + 1}');
-    _key.currentState.insertItem(index);
   }
 }

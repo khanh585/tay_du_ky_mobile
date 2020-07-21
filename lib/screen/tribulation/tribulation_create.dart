@@ -1,39 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:tay_du_ky_app/dao/ToolDAO.dart';
-import 'package:tay_du_ky_app/dto/ToolDTO.dart';
+import 'package:intl/intl.dart';
+import 'package:tay_du_ky_app/dao/TribulationDAO.dart';
+import 'package:tay_du_ky_app/dto/TribulationDTO.dart';
 
-class ToolCreate extends StatefulWidget {
-  final ToolDTO dto;
+class TribulationCreate extends StatefulWidget {
+  final TribulationDTO dto;
 
-  const ToolCreate({Key key, this.dto}) : super(key: key);
+  const TribulationCreate({Key key, this.dto}) : super(key: key);
+
   @override
-  _ToolState createState() => _ToolState();
+  _TribulationState createState() => _TribulationState();
 }
 
-class _ToolState extends State<ToolCreate> {
+class _TribulationState extends State<TribulationCreate> {
   final txtName = TextEditingController();
   final txtDesc = TextEditingController();
-  final txtQuantity = TextEditingController();
-  final txtStatus = TextEditingController();
+  final txtTimes = TextEditingController();
+  final txtAddress = TextEditingController();
+  DateTime _dateStart;
+  DateTime _dateEnd;
+  final df = new DateFormat('dd-MM-yyyy');
+  final txtStart = TextEditingController();
+  final txtEnd = TextEditingController();
   SnackBar snackBar;
+
+  @override
+  void initState() {
+    _dateStart = DateTime.now();
+    _dateEnd = DateTime.now();
+    txtStart.text = (_dateStart == null)
+        ? df.format(DateTime.now())
+        : df.format(_dateStart);
+    txtEnd.text = df.format(_dateEnd);
+    super.initState();
+  }
+
   @override
   void dispose() {
     txtName.dispose();
     txtDesc.dispose();
-    txtQuantity.dispose();
-    txtStatus.dispose();
+    txtTimes.dispose();
+    txtAddress.dispose();
+    txtStart.dispose();
+    txtEnd.dispose();
     super.dispose();
   }
 
-  void _createTool(context) {
+  Future<void> _createTribulation(context) async {
     String name = txtName.text;
     String desc = txtDesc.text;
-    String status = txtStatus.text;
-    int quantity = int.parse(txtQuantity.text);
-    ToolDTO dto = ToolDTO(
-        name: name, description: desc, status: status, quantity: quantity);
+    String address = txtAddress.text;
+    String start = _dateStart.toString();
+    String end = _dateEnd.toString();
+    int times = int.parse(txtTimes.text);
+
+    TribulationDTO dto = TribulationDTO(
+        name: name,
+        description: desc,
+        address: address,
+        times: times,
+        time_start: start,
+        time_end: end);
     try {
-      createTool(dto).then((result) => {_showSnackBar(context, result > 0)});
+      await createTribulation(dto)
+          .then((result) => {_showSnackBar(context, result > 0)});
     } catch (Exception) {
       _showSnackBar(context, false);
     }
@@ -79,11 +109,13 @@ class _ToolState extends State<ToolCreate> {
           child: ListView(
             children: <Widget>[
               TextFormField(
-                controller: txtName,
                 autovalidate: true,
                 validator: (value) {
-                  if (value.isEmpty) return "please enter";
+                  if (value.isEmpty) {
+                    return "please enter";
+                  }
                 },
+                controller: txtName,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Name',
@@ -113,21 +145,75 @@ class _ToolState extends State<ToolCreate> {
                     return "please enter number";
                   }
                 },
-                controller: txtQuantity,
+                controller: txtTimes,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Quantity',
+                  labelText: 'Times',
                 ),
               ),
               SizedBox(
                 height: 10,
               ),
               TextField(
-                controller: txtStatus,
+                controller: txtAddress,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Status',
+                  labelText: 'Address',
                 ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              TextField(
+                controller: txtStart,
+                readOnly: true,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Time Start',
+                ),
+                onTap: () {
+                  showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime(2050))
+                      .then((value) => {
+                            if (value != null)
+                              {
+                                setState(() {
+                                  _dateStart = value;
+                                  txtStart.text = df.format(_dateStart);
+                                }),
+                              },
+                          });
+                },
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              TextField(
+                controller: txtEnd,
+                readOnly: true,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Time End',
+                ),
+                onTap: () {
+                  showDatePicker(
+                          context: context,
+                          initialDate: _dateStart,
+                          firstDate: _dateStart,
+                          lastDate: DateTime(2050))
+                      .then((value) => {
+                            if (value != null)
+                              {
+                                setState(() {
+                                  _dateEnd = value;
+                                  txtEnd.text = df.format(_dateEnd);
+                                }),
+                              }
+                          });
+                },
               ),
               SizedBox(
                 height: 10,
@@ -158,7 +244,7 @@ class _ToolState extends State<ToolCreate> {
                   ),
                   Builder(
                     builder: (context) => RaisedButton(
-                      onPressed: () => _createTool(context),
+                      onPressed: () => _createTribulation(context),
                       textColor: Colors.white,
                       padding: const EdgeInsets.all(0.0),
                       child: Container(

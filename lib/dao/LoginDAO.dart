@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:tay_du_ky_app/util/config.dart';
 
-Future<String> SignIn(String email, String password) async {
+Future<List> SignIn(String email, String password) async {
   try {
     final http.Response response = await http.post(
       "https://flaskserverprm.herokuapp.com/login/",
@@ -16,14 +16,18 @@ Future<String> SignIn(String email, String password) async {
       }),
     );
     if (response.statusCode == 200) {
-      return response.body;
+      var lst = new List(2);
+      lst[0] = json.decode(response.body)["Role"];
+      lst[1] = json.decode(response.body)["UserID"];
+
+      return lst;
     } else if (response.statusCode == 401) {
-      return "";
+      return [];
     } else {
       throw Exception('Failed to login');
     }
   } catch (e) {
     print(e);
-    return "";
+    return [];
   }
 }

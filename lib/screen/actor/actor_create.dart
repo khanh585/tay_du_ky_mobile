@@ -1,39 +1,47 @@
 import 'package:flutter/material.dart';
-import 'package:tay_du_ky_app/dao/ToolDAO.dart';
-import 'package:tay_du_ky_app/dto/ToolDTO.dart';
+import 'package:tay_du_ky_app/dao/ActorDAO.dart';
+import 'package:tay_du_ky_app/dto/ActorDTO.dart';
+import 'package:tay_du_ky_app/screen/tribulation/tribulation_tool.dart';
 
-class ToolCreate extends StatefulWidget {
-  final ToolDTO dto;
+class ActorCreate extends StatefulWidget {
+  final ActorDTO dto;
 
-  const ToolCreate({Key key, this.dto}) : super(key: key);
+  const ActorCreate({Key key, this.dto}) : super(key: key);
   @override
-  _ToolState createState() => _ToolState();
+  _ActorState createState() => _ActorState();
 }
 
-class _ToolState extends State<ToolCreate> {
+class _ActorState extends State<ActorCreate> {
   final txtName = TextEditingController();
   final txtDesc = TextEditingController();
-  final txtQuantity = TextEditingController();
-  final txtStatus = TextEditingController();
+  final txtEmail = TextEditingController();
+  final txtRole = TextEditingController();
+  final txtPhone = TextEditingController();
+  final txtPassword = TextEditingController();
+  bool waitCreate = false;
+
   SnackBar snackBar;
   @override
   void dispose() {
     txtName.dispose();
     txtDesc.dispose();
-    txtQuantity.dispose();
-    txtStatus.dispose();
+    txtEmail.dispose();
+    txtRole.dispose();
+    txtPhone.dispose();
+    txtPassword.dispose();
     super.dispose();
   }
 
-  void _createTool(context) {
+  void _createActor(context) {
     String name = txtName.text;
     String desc = txtDesc.text;
-    String status = txtStatus.text;
-    int quantity = int.parse(txtQuantity.text);
-    ToolDTO dto = ToolDTO(
-        name: name, description: desc, status: status, quantity: quantity);
+    String email = txtEmail.text;
+    String phone = txtPhone.text;
+    String role = txtRole.text;
+    ActorDTO dto = ActorDTO(
+        name: name, description: desc, email: email, phone: phone, role: role);
     try {
-      createTool(dto).then((result) => {_showSnackBar(context, result > 0)});
+      createActor(dto).then((result) => {_showSnackBar(context, result > 0)});
     } catch (Exception) {
       _showSnackBar(context, false);
     }
@@ -72,18 +80,18 @@ class _ToolState extends State<ToolCreate> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text("Create Tool"),
+          title: Text("Create Actor"),
         ),
         body: Container(
           padding: EdgeInsets.all(10),
           child: ListView(
             children: <Widget>[
               TextFormField(
-                controller: txtName,
                 autovalidate: true,
                 validator: (value) {
-                  if (value.isEmpty) return "please enter";
+                  if (value.isEmpty) return "Please enter";
                 },
+                controller: txtName,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Name',
@@ -105,28 +113,44 @@ class _ToolState extends State<ToolCreate> {
               TextFormField(
                 autovalidate: true,
                 validator: (value) {
-                  try {
-                    if (int.parse(value) <= 0) {
-                      return "please enter number > 0";
-                    }
-                  } catch (e) {
-                    return "please enter number";
-                  }
+                  if (!value.contains('@') || value.isEmpty)
+                    return 'please enter email';
                 },
-                controller: txtQuantity,
+                controller: txtEmail,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Quantity',
+                  labelText: 'Email',
                 ),
               ),
               SizedBox(
                 height: 10,
               ),
               TextField(
-                controller: txtStatus,
+                obscureText: true,
+                controller: txtPassword,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Status',
+                  labelText: 'Password',
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              TextField(
+                controller: txtPhone,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Phone',
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              TextField(
+                controller: txtRole,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Role',
                 ),
               ),
               SizedBox(
@@ -158,7 +182,14 @@ class _ToolState extends State<ToolCreate> {
                   ),
                   Builder(
                     builder: (context) => RaisedButton(
-                      onPressed: () => _createTool(context),
+                      onPressed: () {
+                        if (!waitCreate) {
+                          setState(() {
+                            waitCreate = true;
+                          });
+                          _createActor(context);
+                        }
+                      },
                       textColor: Colors.white,
                       padding: const EdgeInsets.all(0.0),
                       child: Container(
@@ -174,8 +205,11 @@ class _ToolState extends State<ToolCreate> {
                           ],
                         ),
                         padding: const EdgeInsets.all(10.0),
-                        child: const Text('Summit',
-                            style: TextStyle(fontSize: 20)),
+                        child: waitCreate
+                            ? CircularProgressIndicator(
+                                strokeWidth: 3,
+                              )
+                            : Text('Summit', style: TextStyle(fontSize: 20)),
                       ),
                     ),
                   ),

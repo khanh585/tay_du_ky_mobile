@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:tay_du_ky_app/dao/ToolDAO.dart';
 import 'package:tay_du_ky_app/dto/ToolDTO.dart';
 import 'package:tay_du_ky_app/login.dart';
 import 'package:tay_du_ky_app/screen/tool/tool_create.dart';
 import 'package:tay_du_ky_app/screen/tool/tool_detail.dart';
-import 'package:tay_du_ky_app/util/config.dart';
 
 class Tool extends StatefulWidget {
   @override
@@ -13,18 +13,41 @@ class Tool extends StatefulWidget {
 
 class _ToolState extends State<Tool> {
   final GlobalKey<AnimatedListState> _key = GlobalKey();
+  final GlobalKey<AnimatedListState> _refkey = GlobalKey();
   List<ToolDTO> futureListToolDTO;
-  // Future<List<ToolDTO>> futureListToolDTO;
+  bool wait = true;
+  DateTime _dateStart;
+  DateTime _dateEnd;
+  final df = new DateFormat('dd-MM-yyyy');
+  final txtStart = TextEditingController();
+  final txtEnd = TextEditingController();
+  final txtStatus = TextEditingController();
   @override
   void initState() {
+    wait = true;
+    _dateStart = DateTime.now();
+    _dateEnd = DateTime.now();
+    txtStart.text = (_dateStart == null)
+        ? df.format(DateTime.now())
+        : df.format(_dateStart);
+    txtEnd.text = df.format(_dateEnd);
     super.initState();
     _getListToolDTO();
   }
 
-  void _getListToolDTO() {
+  @override
+  void dispose() {
+    txtStart.dispose();
+    txtEnd.dispose();
+    txtStatus.dispose();
+    super.dispose();
+  }
+
+  Future<void> _getListToolDTO() async {
     setState(() => {futureListToolDTO = null});
-    fetchListToolDTO().then((result) => {
+    await fetchListToolDTO().then((result) => {
           setState(() => {
+                wait = false,
                 if (result == null)
                   {
                     Navigator.pushAndRemoveUntil(
@@ -37,57 +60,132 @@ class _ToolState extends State<Tool> {
         });
   }
 
+  Future<void> _searchToolDTO() async {
+    String start = _dateStart.toString();
+    String end = _dateEnd.toString();
+    String status = txtStatus.text;
+    setState(() => {futureListToolDTO = null, wait = true});
+    await searchListToolDTO(start, end, status).then((result) => {
+          if (result != null)
+            {
+              setState(() => {
+                    wait = false,
+                    futureListToolDTO = result,
+                  })
+            },
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(
-              title: Text(''),
-              icon: Icon(
-                Icons.refresh,
-                size: 0,
-              ),
-              backgroundColor: Colors.white),
-          BottomNavigationBarItem(
-              title: Text('Refresh'),
-              icon: Icon(
-                Icons.refresh,
-                size: 30,
-                color: Colors.blue,
-              ),
-              backgroundColor: Colors.blue[600]),
-          BottomNavigationBarItem(
-              title: Text(''),
-              icon: Icon(
-                Icons.refresh,
-                size: 0,
-              ),
-              backgroundColor: Colors.white)
-        ],
-        onTap: (value) {
-          _getListToolDTO();
-        },
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addItem(),
         child: Icon(Icons.add),
       ),
-      body: SizedBox(
-        height: MediaQuery.of(context).size.height - 120,
-        child: futureListToolDTO == null
-            ? Center(
-                child: Text(
-                "Loading...",
-                style: TextStyle(fontSize: 25),
-              ))
-            : AnimatedList(
-                key: _key,
-                initialItemCount: futureListToolDTO.length,
-                itemBuilder: (context, index, animation) {
-                  return _buildItem(futureListToolDTO[index], animation, index);
-                },
+      body: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: ListView(
+          children: <Widget>[
+            TextField(
+              controller: txtStart,
+              readOnly: true,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Time Start',
               ),
+              onTap: () {
+                showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2050))
+                    .then((value) => {
+                          if (value != null)
+                            {
+                              setState(() {
+                                _dateStart = value;
+                                txtStart.text = df.format(_dateStart);
+                              }),
+                            },
+                        });
+              },
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            TextField(
+              controller: txtEnd,
+              readOnly: true,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Time End',
+              ),
+              onTap: () {
+                showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: _dateStart,
+                        lastDate: DateTime(2050))
+                    .then((value) => {
+                          if (value != null)
+                            {
+                              setState(() {
+                                _dateEnd = value;
+                                txtEnd.text = df.format(_dateEnd);
+                              }),
+                            }
+                        });
+              },
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            TextField(
+              controller: txtStatus,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Status',
+              ),
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            RaisedButton(
+              onPressed: () => _searchToolDTO(),
+              color: Colors.blue,
+              textColor: Colors.white,
+              child: Text('Search'),
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            RefreshIndicator(
+              key: _refkey,
+              onRefresh: () => _getListToolDTO(),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height - 340,
+                child: wait
+                    ? Center(
+                        child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                      ))
+                    : futureListToolDTO == null
+                        ? Container(
+                            height: 0,
+                          )
+                        : AnimatedList(
+                            key: _key,
+                            initialItemCount: futureListToolDTO.length,
+                            itemBuilder: (context, index, animation) {
+                              return _buildItem(
+                                  futureListToolDTO[index], animation, index);
+                            },
+                          ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

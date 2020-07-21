@@ -4,12 +4,12 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:tay_du_ky_app/dao/ToolDAO.dart';
-import 'package:tay_du_ky_app/dto/ToolDTO.dart';
+import 'package:tay_du_ky_app/dao/ActorDAO.dart';
+import 'package:tay_du_ky_app/dto/ActorDTO.dart';
 
 class DetailScreen extends StatefulWidget {
   // Declare a field that holds the Todo.
-  final ToolDTO dto;
+  final ActorDTO dto;
 
   // In the constructor, require a Todo.
   DetailScreen({Key key, @required this.dto}) : super(key: key);
@@ -21,13 +21,14 @@ class DetailScreen extends StatefulWidget {
 class _DetailScreenState extends State<DetailScreen> {
   final txtName = TextEditingController();
   final txtDesc = TextEditingController();
-  final txtQuantity = TextEditingController();
-  final txtStatus = TextEditingController();
+  final txtEmail = TextEditingController();
+  final txtPhone = TextEditingController();
+  final txtRole = TextEditingController();
 
   SnackBar snackBar;
   File sampleImage;
   String urlImage;
-  ToolDTO dto;
+  ActorDTO dto;
 
   @override
   void initState() {
@@ -41,14 +42,16 @@ class _DetailScreenState extends State<DetailScreen> {
   void dispose() {
     txtName.dispose();
     txtDesc.dispose();
-    txtQuantity.dispose();
-    txtStatus.dispose();
+    txtEmail.dispose();
+    txtPhone.dispose();
+    txtRole.dispose();
+
     super.dispose();
   }
 
-  void _getToolDTO(BuildContext ctx) async {
+  void _getActorDTO(BuildContext ctx) async {
     try {
-      await fetchToolDTO(widget.dto.tool_id.toString()).then((result) => {
+      await fetchActorDTO(widget.dto.actor_id.toString()).then((result) => {
             setState(() => {dto = result}),
             showDTO()
           });
@@ -70,7 +73,7 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   Future _uploadFirebase(BuildContext context) async {
-    String filename = 'tool_' + widget.dto.tool_id.toString() + '.jpg';
+    String filename = 'actor_' + widget.dto.actor_id.toString() + '.jpg';
     final StorageReference firebaseRef =
         FirebaseStorage.instance.ref().child(filename);
     final StorageUploadTask task = firebaseRef.putFile(sampleImage);
@@ -91,11 +94,11 @@ class _DetailScreenState extends State<DetailScreen> {
     // Use the Todo to create the UI.
     return Scaffold(
         appBar: AppBar(
-          title: Text('Tool Detail'),
+          title: Text('actor Detail'),
           actions: <Widget>[
             Builder(
               builder: (context) => FlatButton(
-                  onPressed: () => {_getToolDTO(context)},
+                  onPressed: () => {_getActorDTO(context)},
                   child: Icon(Icons.refresh)),
             )
           ],
@@ -126,10 +129,10 @@ class _DetailScreenState extends State<DetailScreen> {
                 height: 10,
               ),
               TextFormField(
-                autovalidate: true,
                 validator: (value) {
                   if (value.isEmpty) return "please enter";
                 },
+                autovalidate: true,
                 controller: txtName,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
@@ -152,28 +155,33 @@ class _DetailScreenState extends State<DetailScreen> {
               TextFormField(
                 autovalidate: true,
                 validator: (value) {
-                  try {
-                    if (int.parse(value) <= 0) {
-                      return "please enter number > 0";
-                    }
-                  } catch (e) {
-                    return "please enter number";
-                  }
+                  if (!value.contains('@') || value.isEmpty)
+                    return 'please enter email';
                 },
-                controller: txtQuantity,
+                controller: txtEmail,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Quantity',
+                  labelText: 'Email',
                 ),
               ),
               SizedBox(
                 height: 10,
               ),
               TextField(
-                controller: txtStatus,
+                controller: txtPhone,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Status',
+                  labelText: 'Phone',
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              TextField(
+                controller: txtRole,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Role',
                 ),
               ),
               SizedBox(
@@ -235,7 +243,8 @@ class _DetailScreenState extends State<DetailScreen> {
                   ),
                   Builder(
                     builder: (context) => RaisedButton(
-                      onPressed: () => _updateTool(context, widget.dto.tool_id),
+                      onPressed: () =>
+                          _updateactor(context, widget.dto.actor_id),
                       textColor: Colors.white,
                       padding: const EdgeInsets.all(0.0),
                       child: Container(
@@ -266,22 +275,26 @@ class _DetailScreenState extends State<DetailScreen> {
         ));
   }
 
-  _updateTool(BuildContext context, int toolID) {
+  _updateactor(BuildContext context, int actorID) {
     String name = txtName.text;
     String desc = txtDesc.text;
-    String status = txtStatus.text;
-    int quantity = int.parse(txtQuantity.text);
-    ToolDTO dto = ToolDTO(
-        name: name,
-        description: desc,
-        status: status,
-        image: urlImage,
-        quantity: quantity);
+    String phone = txtPhone.text;
+    String email = txtEmail.text;
+    String role = txtRole.text;
+    ActorDTO dto = ActorDTO(
+      name: name,
+      description: desc,
+      email: email,
+      image: urlImage,
+      role: role,
+      phone: phone,
+    );
     try {
-      updateTool(toolID.toString(), dto)
-          .then((result) => {_showSnackBar(context, result, 'Update tool')});
+      updateActor(actorID.toString(), dto)
+          .then((result) => {_showSnackBar(context, result, 'Update actor')});
     } catch (Exception) {
-      _showSnackBar(context, false, 'Update tool');
+      print('eeeeeeeeeeeeeeeeeeeeeee');
+      _showSnackBar(context, false, 'Update actor');
     }
   }
 
@@ -316,7 +329,8 @@ class _DetailScreenState extends State<DetailScreen> {
   void showDTO() {
     txtName.text = dto.name;
     txtDesc.text = dto.description;
-    txtQuantity.text = dto.quantity.toString();
-    txtStatus.text = dto.status;
+    txtEmail.text = dto.email;
+    txtRole.text = dto.role;
+    txtPhone.text = dto.phone;
   }
 }

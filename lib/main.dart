@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tay_du_ky_app/admin.dart';
 import 'package:tay_du_ky_app/login.dart';
 
 void main() {

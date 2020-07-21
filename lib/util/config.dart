@@ -1,4 +1,4 @@
 final String PREFIX = "https://flaskserverprm.herokuapp.com";
-String AUTHORIZATION_TOKEN = "";
-String MEM_EMAIL = "thanlongcr12@gmail.com";
-String MEM_PASSWORD = "123";
+String USER_ID = "";
+String ROLE = "";
+String EMAIL = "trict@gmail.com";
